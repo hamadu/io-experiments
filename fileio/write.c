@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
   const char* fizz = "fizz";
   const char* buzz = "buzz";
   char num[10];
-  for (int i = 1 ; i <= 1000000 ; i++) {
+  for (int i = 1 ; i <= 5000000 ; i++) {
     int flg = 0;
     if (i % 3 == 0) {
       flg = 1;
