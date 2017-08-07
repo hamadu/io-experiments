@@ -13,13 +13,15 @@ void print_error_and_exit() {
 }
 
 int main(int argc, char* argv[]) {
+  int fd = socket(AF_INET, SOCK_STREAM, 0);
+
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_port = htons(8080);
   inet_aton("127.0.0.1", &addr.sin_addr);
 
-  int fd = socket(AF_INET, SOCK_STREAM, 0);
+
   if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     print_error_and_exit();
   }
