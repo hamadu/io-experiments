@@ -13,10 +13,7 @@ void* another(void *arg) {
 int main(int argc, char* argv[]) {
   pthread_t thread;
   pthread_create(&thread, NULL, *another, NULL);
-
   sleep(3);
-
   printf("hello from main thread: %d\n", global_num);
-
   return 0;
 }

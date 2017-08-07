@@ -10,17 +10,15 @@ void print_error_and_exit() {
 }
 
 int main(int argc, char* argv[]) {
-  int status;
   pid_t result = fork();
   if (result == -1) {
     print_error_and_exit();
   }
 
   if (result == 0) {
-    printf("hi. this is child process\n");
-    sleep(3);
+    execl("/bin/ls", ".", (char*)NULL);
   } else {
-    waitpid(result, &status, 0);
+    sleep(3);
     printf("hi. this is parent process\n");
   }
   return 0;
