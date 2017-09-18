@@ -1,14 +1,16 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/epoll.h>
+#include <signal.h>
 
-#define MAX_EVENTS 10
+#define MAX_EVENTS 100
 
 void print_error_and_exit(const char* s) {
   perror(s);
@@ -16,6 +18,8 @@ void print_error_and_exit(const char* s) {
 }
 
 int main(int argc, char** argv) {
+  signal(SIGPIPE, SIG_IGN);
+
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd == -1) {
     print_error_and_exit("create socket");
@@ -30,11 +34,11 @@ int main(int argc, char** argv) {
     print_error_and_exit("bind address to the socket");
   }
 
-  if (listen(sockfd, 100) < 0) {
+  if (listen(sockfd, 10000) < 0) {
     print_error_and_exit("listen to the socket");
   }
 
-  int epollfd = epoll_create(10);
+  int epollfd = epoll_create1(0);
 
   struct epoll_event ev;
   ev.events = EPOLLIN;
@@ -46,18 +50,28 @@ int main(int argc, char** argv) {
   struct epoll_event events[MAX_EVENTS];
   while (1) {
     int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+    if (nfds == -1) {
+      print_error_and_exit("waiting events");
+    }
+
     for (int i = 0 ; i < nfds ; i++) {
       int fd = events[i].data.fd;
       if (fd == sockfd) {
         int peerfd = accept(fd, NULL, NULL);
-        ev.events = EPOLLIN | EPOLLET;
-        ev.data.fd = peerfd;
-        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, peerfd, &ev) == -1) {
+        struct epoll_event cev;
+        cev.events = EPOLLIN | EPOLLET;
+        cev.data.fd = peerfd;
+        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, peerfd, &cev) == -1) {
           print_error_and_exit("registering the peer socket descriptor to epoll");
         }
       } else {
         char *data = "boom";
-        write(fd, data, strlen(data));
+        int write_result = write(fd, data, strlen(data));
+        if (write_result == EPIPE) {
+          if (epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL) == -1) {
+            print_error_and_exit("closing peer socket descriptor to epoll");
+          }
+        }
       }
     }
   }
