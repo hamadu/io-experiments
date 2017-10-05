@@ -14,19 +14,13 @@ void print_error_and_exit() {
   exit(1);
 }
 
-long long current_timestamp() {
-    struct timeval te;
-    gettimeofday(&te, NULL); // get current time
-    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
-    return milliseconds;
-}
-
 int main(int argc, char* argv[]) {
-  if (argc <= 1) {
-    printf("usage: %s [address]\n", argv[0]);
+  if (argc <= 2) {
+    printf("usage: %s [address] [wait]\n", argv[0]);
     exit(1);
   }
 
+  int wait = atoi(argv[2]);
   int fd = socket(AF_INET, SOCK_STREAM, 0);
 
   struct sockaddr_in addr;
@@ -39,17 +33,14 @@ int main(int argc, char* argv[]) {
     print_error_and_exit();
   }
 
-  for (int cur = 0 ; cur < 100 ; cur++) {
-    long long cur = current_timestamp();
-
+  while (1) {
     char *data = "boom";
     write(fd, data, strlen(data));
 
     char buf[120];
     read(fd, buf, 120);
 
-    long long elapsed = current_timestamp() - cur;
-    printf("wait = %lld\n", elapsed);
+    usleep(wait * 1000);
   }
 
   close(fd);

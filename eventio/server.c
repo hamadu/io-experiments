@@ -17,7 +17,12 @@ void print_error_and_exit(const char* s) {
   exit(1);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
+  if (argc <= 1) {
+    printf("usage: %s [address]\n", argv[0]);
+    exit(1);
+  }
+
   signal(SIGPIPE, SIG_IGN);
 
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -29,7 +34,7 @@ int main(int argc, char** argv) {
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_port = htons(8080);
-  inet_aton("127.0.0.1", &addr.sin_addr);
+  inet_aton(argv[1], &addr.sin_addr);
   if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     print_error_and_exit("bind address to the socket");
   }
