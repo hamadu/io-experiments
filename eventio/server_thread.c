@@ -18,16 +18,16 @@ void print_error_and_exit(const char* s) {
 }
 
 void* process_client(void *arg) {
-  int peerfd = *(int *)arg;
+  int peerFd = *(int *)arg;
 
   char buf[127];
   while (1) {
-    int read_result = read(peerfd, buf, 127);
+    int read_result = read(peerFd, buf, 127);
     if (read_result <= 0) {
       return NULL;
     }
 
-    int write_result = write(peerfd, buf, read_result);
+    int write_result = write(peerFd, buf, read_result);
     if (write_result == -1) {
       return NULL;
     }
